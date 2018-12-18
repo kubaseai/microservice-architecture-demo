@@ -1,0 +1,54 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: gw.vger.sys.one.pl
+spec:
+  host: gw.vger.sys.one.pl
+  port:
+    targetPort: gw-service-ssl
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: passthrough
+  to:
+    kind: Service
+    name: gw-ssl-service
+    weight: 100
+  wildcardPolicy: None
+
+---
+
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: gw-ui.vger.sys.one.pl
+spec:
+  host: gw-ui.vger.sys.one.pl
+  port:
+    targetPort: gw-ui
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: gw-ui-service
+    weight: 100
+  wildcardPolicy: None
+
+---
+
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: gw-admin-ui.vger.sys.one.pl
+spec:
+  host: gw-admin-ui.vger.sys.one.pl
+  port:
+    targetPort: gw-admin-ui
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: gw-admin-ui-service
+    weight: 100
+  wildcardPolicy: None

@@ -1,0 +1,16 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: micro-service.vger.sys.one.pl
+spec:
+  host: micro-service.vger.sys.one.pl
+  port:
+    targetPort: service-http
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: edge
+  to:
+    kind: Service
+    name: micro-svc-service
+    weight: 100
+  wildcardPolicy: None

@@ -1,0 +1,64 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: micro-svc-deployment
+spec:
+  containers:
+  replicas: 1
+  minReadySeconds: 30
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        deployment: micro-svc
+    spec:
+      containers:
+      - name: micro-svc
+        image: kubaseai/s5
+        env:
+        - name: _JAVA_OPTS
+          value: "-Xms128m -Xmx128m"
+#        resources:
+#          limits:
+#            cpu: 800m
+#          requests:
+#            cpu: 300m
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - 'curl http://localhost:8181/health'
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 6
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - 'curl http://localhost:8181/health'
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 6
+        lifecycle:
+          preStop:
+            exec:
+              command:  ['/bin/sh', '-c', 'echo "requested stop from container orchestrator"']
+        imagePullPolicy: IfNotPresent
+        ports:
+        -
+          containerPort: 8181
+          protocol: "TCP"
+        volumeMounts:
+        - name: micro-svc-app-properties
+          mountPath: /tmp/config
+      serviceAccountName: "msa-account"
+      volumes:
+      - name: micro-svc-app-properties
+        configMap:
+          name: micro-svc-app-properties

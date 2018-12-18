@@ -1,0 +1,72 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gw
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: app
+        app: gw
+    spec:
+      initContainers:
+      - name: gw-wait4db
+        image: postgres:9
+        command: [ "/bin/sh", "-c", "until pg_isready -h gw-db-pgsql-service -p 5432; do echo waiting for db; sleep 2; done; sleep 10;" ]
+      containers:
+      - name: gw
+        image: kong:0.14.1-centos
+        command: [ "/bin/sh", "-c", "kong start --v" ]
+        env:
+          - name: _KONG_NGINX_HTTP_INCLUDE
+            value: "/tmp/spa_usvc.conf"
+          - name: KONG_NGINX_DAEMON
+            value: 'off'
+          - name: KONG_ADMIN_LISTEN
+            value: "0.0.0.0:8001, 0.0.0.0:8444 ssl"
+          - name: KONG_DATABASE
+            value: postgres
+          - name: KONG_PG_PASSWORD
+            value: p0st6r35
+          - name: KONG_PG_HOST
+            value: gw-db-pgsql-service
+          - name: KONG_PROXY_ACCESS_LOG
+            value: "/dev/stdout"
+          - name: KONG_ADMIN_ACCESS_LOG
+            value: "/dev/stdout"
+          - name: KONG_PROXY_ERROR_LOG
+            value: "/dev/stderr"
+          - name: KONG_ADMIN_ERROR_LOG
+            value: "/dev/stderr"
+          - name: KONG_LOG_LEVEL
+            value: debug
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 9
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 9
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: admin
+          containerPort: 8001
+          protocol: TCP
+        - name: proxy
+          containerPort: 8000
+          protocol: TCP
+        - name: proxy-ssl
+          containerPort: 8443
+          protocol: TCP
+        - name: admin-ssl
+          containerPort: 8444
+          protocol: TCP
+      serviceAccountName: msa-account

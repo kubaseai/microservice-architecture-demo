@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gw-db-migration
+spec:
+  template:
+    metadata:
+      name: gw-db-migration
+    spec:
+      initContainers:
+      - name: gw-db-migration-wait4db
+        image: postgres:9
+        command: [ "/bin/sh", "-c", "until pg_isready -h gw-db-pgsql-service -p 5432; do echo waiting for db; sleep 2; done;" ]
+      containers:
+      - name: gw-db-migration
+        image: kong:0.14.1-centos
+        env:
+          - name: KONG_NGINX_DAEMON
+            value: 'off'
+          - name: KONG_DATABASE
+            value: postgres
+          - name: KONG_PG_PASSWORD
+            value: p0st6r35
+          - name: KONG_PG_HOST
+            value: gw-db-pgsql-service
+        command: [ "/bin/sh", "-c", "kong migrations --vv up" ]
+        imagePullPolicy: IfNotPresent
+      restartPolicy: Never
+      serviceAccountName: msa-account

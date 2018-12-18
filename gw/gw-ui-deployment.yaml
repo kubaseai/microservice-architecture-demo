@@ -1,0 +1,47 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gw-ui
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: app
+        app: gw-ui
+    spec:
+      initContainers:
+      - name: gw-wait4db
+        image: postgres:9
+        command: [ "/bin/sh", "-c", "until pg_isready -h gw-db-pgsql-service -p 5432; do echo waiting for db; sleep 2; done; sleep 10;" ]
+      containers:
+      - name: gw-ui
+        image: pantsel/konga
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 1337
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 9
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 1337
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 9
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: gw-ui
+          containerPort: 1337
+          protocol: TCP
+      - name: gw-admin-ui
+        image: pgbi/kong-dashboard
+        args: [ "start", "--kong-url", "http://gw-admin-service:8001" ]
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: gw-admin-ui
+          containerPort: 8080
+          protocol: TCP
+      serviceAccountName: msa-account

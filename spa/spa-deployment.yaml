@@ -1,0 +1,69 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: spa-deployment
+spec:
+  replicas: 1
+  minReadySeconds: 5
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        deployment: spa
+    spec:
+      containers:
+      - name: spa
+        image: nginx
+        env:
+        - name: WEBAPP
+          value: "spa"
+#        resources:
+#          limits:
+#            cpu: 800m
+#          requests:
+#            cpu: 300m
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - 'pidof nginx'
+          initialDelaySeconds: 3
+          periodSeconds: 10
+          failureThreshold: 18
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - 'pidof nginx'
+          initialDelaySeconds: 3
+          periodSeconds: 10
+          failureThreshold: 18
+        lifecycle:
+          preStop:
+            exec:
+              command:  ['/bin/sh', '-c', 'echo "requested stop from container orchestrator"']
+        imagePullPolicy: IfNotPresent
+        ports:
+        -
+          containerPort: 80
+          protocol: "TCP"
+        volumeMounts:
+        - name: spa-files
+          mountPath: /usr/share/nginx/html
+        - name: spa-cors
+          mountPath: /etc/nginx/conf.d
+      serviceAccountName: "msa-account"
+      volumes:
+      - name: spa-files
+        configMap:
+          name: spa-files
+      - name: spa-cors
+        configMap:
+          name: spa-cors
+

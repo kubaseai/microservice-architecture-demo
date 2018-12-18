@@ -1,0 +1,63 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: gw-db-pgsql-deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        deployment: gw-db-pgsql
+    spec:
+      containers:
+      - name: gw-db-pgsql
+        image: postgres:9
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - '-i'
+              - '-c'
+              - 'PGPASSWORD=$POSTGRES_PASSWORD psql -h 127.0.0.1 -U $POSTGRES_USER $POSTGRES_DB -c "SELECT 1"'
+          failureThreshold: 6
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        env:
+        - name: POSTGRES_USER
+          value: kong
+        - name: POSTGRES_PASSWORD
+          value: p0st6r35
+        - name: POSTGRES_DB
+          value: kong
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - '-i'
+              - '-c'
+              - 'PGPASSWORD=$POSTGRES_PASSWORD psql -h 127.0.0.1 -U $POSTGRES_USER $POSTGRES_DB -c "SELECT 1"'
+          failureThreshold: 6
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          limits:
+            memory: 1Gi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - name: gw-db-persistent-storage
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: gw-db-persistent-storage
+        persistentVolumeClaim:
+          claimName: gw-db-volume-claim
+      serviceAccountName: "msa-account"
+

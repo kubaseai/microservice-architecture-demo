@@ -1,0 +1,62 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: iam-deployment
+spec:
+  replicas: 1
+  minReadySeconds: 30
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        deployment: iam
+    spec:
+      containers:
+      - name: iam
+        image: jboss/keycloak
+        env:
+        - name: KEYCLOAK_USER
+          value: "admin"
+        - name: KEYCLOAK_PASSWORD
+          value: "password"
+        - name: DB_VENDOR
+          value: "h2"
+        - name: JAVA_OPTS
+          value: "-Xms768m -Xmx768m -Djava.net.preferIPv4Stack=true"
+#        resources:
+#          limits:
+#            cpu: 800m
+#          requests:
+#            cpu: 300m
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - 'curl -k https://localhost:8443'
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 18
+        readinessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - 'curl -k https://localhost:8443'
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 18
+        lifecycle:
+          preStop:
+            exec:
+              command:  ['/bin/sh', '-c', 'echo "requested stop by container orchestrator"']
+        imagePullPolicy: IfNotPresent
+        ports:
+        -
+          containerPort: 8443
+          protocol: "TCP"
+      serviceAccountName: "msa-account"

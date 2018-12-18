@@ -1,0 +1,25 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: msa
+  name: endpoints-reader-role
+rules:
+- apiGroups: [""]
+  verbs: ["get", "list"]
+  resources: ["endpoints"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: msa-endpoints-reader-role-binding
+  namespace: msa
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: endpoints-reader-role
+subjects:
+  - kind: ServiceAccount
+    name: msa-account
+    namespace: msa
