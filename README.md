@@ -30,6 +30,8 @@ cd scripts<br/>
 <br/>
 ![required OIDC configuration #1](https://github.com/kubaseai/microservice-architecture-demo/blob/master/_imgs/msa-06.png)
 <br/>
+![SPA calls usvc](https://github.com/kubaseai/microservice-architecture-demo/blob/master/_imgs/msa-07.png)
+<br/>
 
 
 
