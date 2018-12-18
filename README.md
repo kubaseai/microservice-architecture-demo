@@ -12,12 +12,24 @@ Exposes for SPA /auth (from iam-service) with JS and /getTimeZoneOffset (from mi
 ## Microservice
 Microservice is secured by keycloak Spring Boot starter and validates tokens with roles.
 
-![deploy.sh to bring it up](https://github.com/kubaseai/microservice-architecture-demo/tree/master/_imgs/msa-01.png)
-![pods](https://github.com/kubaseai/microservice-architecture-demo/tree/master/_imgs/msa-02.png)
-![routes](https://github.com/kubaseai/microservice-architecture-demo/tree/master/_imgs/msa-03.png)
-![login to Keycloak](https://github.com/kubaseai/microservice-architecture-demo/tree/master/_imgs/msa-04.png)
-![required OIDC configuration #1](https://github.com/kubaseai/microservice-architecture-demo/tree/master/_imgs/msa-05.png)
-![required OIDC configuration #1](https://github.com/kubaseai/microservice-architecture-demo/tree/master/_imgs/msa-06.png)
+<br/>
+<hr/>
+cd scripts<br/>
+./deploy.sh
+<hr/>
+
+![deploy.sh to bring it up](https://github.com/kubaseai/microservice-architecture-demo/blob/master/_imgs/msa-01.png)
+<br/>
+![pods](https://github.com/kubaseai/microservice-architecture-demo/blob/master/_imgs/msa-02.png)
+<br/>
+![routes](https://github.com/kubaseai/microservice-architecture-demo/blob/master/_imgs/msa-03.png)
+<br/>
+![login to Keycloak](https://github.com/kubaseai/microservice-architecture-demo/blob/master/_imgs/msa-04.png)
+<br/>
+![required OIDC configuration #1](https://github.com/kubaseai/microservice-architecture-demo/blob/master/_imgs/msa-05.png)
+<br/>
+![required OIDC configuration #1](https://github.com/kubaseai/microservice-architecture-demo/blob/master/_imgs/msa-06.png)
+<br/>
 
 
 
