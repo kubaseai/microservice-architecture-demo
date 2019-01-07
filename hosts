@@ -1,0 +1,137 @@
+## Before deploying cluster always check latest
+## https://access.redhat.com/documentation/en-us/openshift_container_platform/${latest}/html-single/installing_clusters/#install-config-example-inventories
+
+## Setup A: In an ideal production world: ##
+#
+# ((master) API server, scheduler, ...)
+# ((infra) etcd)
+# ((infra) registry)
+# ((infra) router1)
+# ((infra) router2)
+# ((node) deployments)
+# ((node) deployments)
+#
+# so at least 7 servers
+
+## Setup B: production/qa on limited resources ##
+#
+# ((master) API server, scheduler, etcd, router, registry
+# ((node) deployment
+# ((node) deployment
+#
+# so at least 3 nodes
+
+## Setup C: DEV, everything on one box ##
+
+[masters]
+# at least 4vCPUs, 16GB RAM, 50GB SSD storage
+osh.localdomain
+
+[etcd]
+# at least 2vCPUs, 8GB RAM, 5GB SSD storage
+# etcd generates a lot of I/O and needs very durable SSD
+osh.localdomain
+
+[nodes]
+# at least 1vCPU, 8GB RAM, 40GB storage
+osh.localdomain openshift_node_group_name="node-config-master-infra"
+#osh.localdomain openshift_node_group_name="node-config-infra"
+#osh.localdomain openshift_node_group_name="node-config-compute"
+
+[nfs]
+osh.localdomain
+
+[glusterfs]
+osh.localdomain l_kubelet_node_name="osh.localdomain"
+localhost l_kubelet_node_name="osh.localdomain"
+127.0.0.1 l_kubelet_node_name="osh.localdomain"
+
+[glusterfs_registry]
+osh.localdomain
+
+[OSEv3:children]
+masters
+nodes
+etcd
+nfs
+#glusterfs
+#glusterfs_registry
+
+[OSEv3:vars]
+# router should be placed on infra
+openshift_router_selector='node-role.kubernetes.io/master=true'
+# registry should be placed on infra
+openshift_registry_selector='node-role.kubernetes.io/master=true'
+# we want to use docker --storage-driver=btrfs
+openshift_disable_check=memory_availability,disk_availability,docker_storage_driver,docker_storage,docker_image_availability
+
+# we want to have replicated registry using GlusterFS replicated storage
+#openshift_storage_glusterfs_namespace=app-storage
+#openshift_storage_glusterfs_storageclass=true
+#openshift_storage_glusterfs_storageclassdefault=false
+#openshift_hosted_registry_storage_kind=glusterfs
+#openshift_hosted_registry_storage_volume_size=5Gi
+#openshift_hosted_registry_selector='node-role.kubernetes.io/infra=true'
+#openshift_hosted_registry_replicas=1
+
+openshift_hosted_manage_router=true
+openshift_hosted_manage_registry=true
+openshift_hosted_manage_registry_console=true
+
+# let's scale router
+openshift_hosted_router_replicas=4
+
+# automatic local storage
+openshift_persistentlocalstorage_enabled=true
+openshift_persistentlocalstorage_classes=[]
+openshift_persistentlocalstorage_path=/mnt/local-storage
+openshift_persistentlocalstorage_provisionner_image=quay.io/external_storage/local-volume-provisioner:latest
+
+openshift_deployment_type=origin
+#openshift_deployment_type=openshift-enterprise
+openshift_release="3.11"
+openshift_install_examples=true
+
+# subdomain concept: service.apps.osh.localdomain
+openshift_master_default_subdomain=apps.osh.localdomain
+openshift_master_cluster_hostname=osh.localdomain
+openshift_master_cluster_public_hostname=osh.localdomain
+
+# in case you have network LB device in front of OCP services
+# you don't need manually provided certificates, but it is highly
+# recommended; when you consume services directly from router
+# it should use own dedicated certificates
+openshift_ca_cert_expire_days=3660
+openshift_node_cert_expire_days=3660
+openshift_master_cert_expire_days=3660
+etcd_ca_default_days=3660
+#openshift_master_named_certificates=
+#openshift_hosted_router_certificate={"certfile": "/path/to/router.crt", "keyfile": "/path/to/router.key", "cafile": "/path/to/router-ca.crt"}
+
+openshift_cluster_monitoring_operator_install=true
+openshift_metrics_install_metrics=true
+openshift_logging_install_logging=true
+ansible_service_broker_install=false
+openshift_node_problem_detector_install=true
+openshift_enable_olm=true
+osm_use_cockpit=true
+osm_cockpit_plugins=['cockpit-kubernetes']
+
+# uncomment if you don't have docker already configured for OKD container method
+#openshift_docker_insecure_registries=172.30.0.0/16
+#openshift_docker_options=
+
+# Some SLAs
+openshift_master_external_ratelimit_qps=200
+openshift_master_external_ratelimit_burst=400
+openshift_master_loopback_ratelimit_qps=300
+openshift_master_loopback_ratelimit_burst=600
+
+# please change to OAuth Keycloak
+openshift_master_identity_providers=[{'name': 'allow_all', 'login': 'true', 'challenge': 'true', 'kind': 'AllowAllPasswordIdentityProvider'}]
+
+#openshift_logging_es_cluster_size=1
+#openshift_node_dnsmasq_additional_config_file=/etc/dnsmasq/conf.d/infra.conf
+
+os_firewall_use_firewalld=true
+ansible_ssh_user=root
