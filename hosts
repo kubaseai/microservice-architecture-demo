@@ -1,7 +1,16 @@
+VER=3.11
 ################################################################################
 ## Before deploying cluster always check latest
 ## https://access.redhat.com/documentation/en-us/openshift_container_platform/
-## ${latest}/html-single/installing_clusters/#install-config-example-inventories
+## $VER/html-single/installing_clusters/#install-config-example-inventories
+## then run on fresh system:
+## ssh-keygen
+## ssh-copy-id -i /root/.ssh/id_rsa.pub root@osh.localdomain
+## ssh root@osh.localdomain
+## git clone https://github.com/openshift/openshift-ansible.git -b release-$VER
+## yum install epel-release
+## cd openshift-ansible/playbooks
+## ansible-playbook deploy_cluster.yml
 
 ################################################################################
 ## Setup A: In an almost ideal production world:
@@ -44,7 +53,7 @@ osh.localdomain
 osh.localdomain
 
 [nodes]
-# at least 1vCPU, 8GB RAM, 40GB storage
+# at least 1vCPU, 8GB RAM, 40GB storage, 2 x 100GB for GlusterFS
 osh.localdomain openshift_node_group_name="node-config-all-in-one"
 #osh.localdomain openshift_node_group_name="node-config-master-infra"
 #osh.localdomain openshift_node_group_name="node-config-infra"
@@ -53,20 +62,26 @@ osh.localdomain openshift_node_group_name="node-config-all-in-one"
 [nfs]
 osh.localdomain
 
-[glusterfs]
+#[glusterfs]
 # For DEV please modify glusterfs_deploy.yml 'assert' condition to contain 'count >= 1'
-osh.localdomain l_kubelet_node_name="osh.localdomain" glusterfs_devices='[ "/mnt/local-storage/gluster.block" ]'
+# and heketi_init_db.yml setup command adding '--durability=none --replica=1'
+#
+# You need 100GB local SSD or LVM
+#osh.localdomain glusterfs_devices='[ "/dev/sdb" ]'
 
 [glusterfs_registry]
 # For DEV please modify glusterfs_deploy.yml 'assert' condition to contain 'count >= 1'
-osh.localdomain l_kubelet_node_name="osh.localdomain" glusterfs_devices='[ "/mnt/local-storage/gluster.block" ]'
+# and heketi_init_db.yml setup command adding '--durability=none --replica=1'
+#
+# You need 100GB local SSD or LVM
+osh.localdomain glusterfs_devices='[ "/dev/sdd" ]'
 
 [OSEv3:children]
 masters
 nodes
 etcd
 nfs
-glusterfs
+#glusterfs
 glusterfs_registry
 
 [OSEv3:vars]
@@ -77,11 +92,10 @@ openshift_registry_selector='node-role.kubernetes.io/master=true'
 # we want to use docker --storage-driver=btrfs
 openshift_disable_check=memory_availability,disk_availability,docker_storage_driver,docker_storage,docker_image_availability
 
-# we want to use GlusterFS replicated storage
-# yum install centos-release-gluster
-# yum install glusterfs-server gluster-block
+# we want to use GlusterFS replicated storage via Heketi
 openshift_master_dynamic_provisioning_enabled=true
-openshift_hosted_registry_storage_kind=glusterfs 
+
+openshift_hosted_registry_storage_kind=dynamic
 openshift_hosted_registry_storage_volume_size=5Gi
 openshift_hosted_registry_selector='node-role.kubernetes.io/infra=true'
 
@@ -90,8 +104,8 @@ openshift_metrics_hawkular_nodeselector={"node-role.kubernetes.io/infra": "true"
 openshift_metrics_cassandra_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_metrics_heapster_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_metrics_storage_kind=dynamic
-openshift_metrics_storage_volume_size=10Gi
-openshift_metrics_cassandra_pvc_storage_class_name="glusterfs-registry" 
+openshift_metrics_storage_volume_size=5Gi
+openshift_metrics_cassandra_pvc_storage_class_name="infra-storage" 
 
 openshift_logging_install_logging=true
 openshift_logging_kibana_nodeselector={"node-role.kubernetes.io/infra": "true"} 
@@ -100,27 +114,11 @@ openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra": "true"}
 openshift_logging_storage_kind=dynamic
 openshift_logging_es_pvc_size=10Gi
 openshift_logging_elasticsearch_storage_type=pvc
-openshift_logging_es_pvc_storage_class_name="glusterfs-registry"
+openshift_logging_es_pvc_storage_class_name="infra-storage"
 
-openshift_storage_glusterfs_namespace=app-storage
-openshift_storage_glusterfs_storageclass=true
-openshift_storage_glusterfs_storageclass_default=false
-#openshift_storage_glusterfs_is_native=false
-#openshift_storage_glusterfs_heketi_is_native=true
-#openshift_storage_glusterfs_heketi_executor=ssh
-#openshift_storage_glusterfs_heketi_ssh_port=22
-#openshift_storage_glusterfs_heketi_ssh_user=root
-#openshift_storage_glusterfs_heketi_ssh_sudo=false
-#openshift_storage_glusterfs_heketi_ssh_keyfile="/root/.ssh/id_rsa"
+openshift_storage_glusterfs_block_host_vol_size=30
 
 openshift_storage_glusterfs_registry_namespace=infra-storage
-#openshift_storage_glusterfs_registry_is_native=false
-#openshift_storage_glusterfs_registry_heketi_is_native=true
-#openshift_storage_glusterfs_registry_heketi_executor=ssh
-#openshift_storage_glusterfs_registry_heketi_ssh_port=22
-#openshift_storage_glusterfs_registry_heketi_ssh_user=root
-#openshift_storage_glusterfs_registry_heketi_ssh_sudo=false
-#openshift_storage_glusterfs_registry_heketi_ssh_keyfile="/root/.ssh/id_rsa"
 
 openshift_hosted_registry_replicas=1
 
