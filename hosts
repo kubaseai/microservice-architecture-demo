@@ -1,14 +1,28 @@
-VER=3.11
 ################################################################################
-## Before deploying cluster always check latest
-## https://access.redhat.com/documentation/en-us/openshift_container_platform/
-## $VER/html-single/installing_clusters/#install-config-example-inventories
+# VER=3.11
+################################################################################
+## Before deploying cluster always check latest:
+## 1.https://access.redhat.com/documentation/en-us/openshift_container_platform/
+## $VER/html-single/installing_clusters/#install-config-example-inventories,
+##
+## 2.https://docs.okd.io/latest/install_config/persistent_storage/
+## persistent_storage_glusterfs.html#install-config-persistent-storage-
+## persistent-storage-glusterfs
+##
+## 3.https://github.com/openshift/openshift-ansible/tree/master/roles/
+## openshift_storage_glusterfs and openshift_logging
+##
+## 4. https://docs.openshift.com/container-platform/3.11/install_config/
+## aggregate_logging.html
+##
 ## then run on fresh system:
-## ssh-keygen
-## ssh-copy-id -i /root/.ssh/id_rsa.pub root@osh.localdomain
+##
+## ssh keygen
+## ssh-copy-id /root/.ssh/id_rsa.pub root@osh.localdomain
 ## ssh root@osh.localdomain
 ## git clone https://github.com/openshift/openshift-ansible.git -b release-$VER
 ## yum install epel-release
+## yum install ansible
 ## cd openshift-ansible/playbooks
 ## ansible-playbook deploy_cluster.yml
 
@@ -45,43 +59,39 @@ VER=3.11
 
 [masters]
 # at least 4vCPUs, 16GB RAM, 50GB SSD storage
-osh.localdomain
+k0.sys.one.pl
 
 [etcd]
 # at least 2vCPUs, 8GB RAM, 5GB SSD storage
 # etcd generates a lot of I/O and needs very durable SSD
-osh.localdomain
+k0.sys.one.pl
 
 [nodes]
 # at least 1vCPU, 8GB RAM, 40GB storage, 2 x 100GB for GlusterFS
-osh.localdomain openshift_node_group_name="node-config-all-in-one"
-#osh.localdomain openshift_node_group_name="node-config-master-infra"
-#osh.localdomain openshift_node_group_name="node-config-infra"
-#osh.localdomain openshift_node_group_name="node-config-compute"
+k0.sys.one.pl openshift_node_group_name="node-config-all-in-one"
+#k0.sys.one.pl openshift_node_group_name="node-config-master-infra"
+#k0.sys.one.pl openshift_node_group_name="node-config-infra"
+#k0.sys.one.pl openshift_node_group_name="node-config-compute"
 
-[nfs]
-osh.localdomain
-
-#[glusterfs]
+[glusterfs]
 # For DEV please modify glusterfs_deploy.yml 'assert' condition to contain 'count >= 1'
-# and heketi_init_db.yml setup command adding '--durability=none --replica=1'
-#
+# and tasks/heketi_init_db.yml setup command adding '--durability=none --replica=1'
 # You need 100GB local SSD or LVM
-#osh.localdomain glusterfs_devices='[ "/dev/sdb" ]'
+#
+k0.sys.one.pl l_kubelet_node_name="k0.sys.one.pl" glusterfs_devices='[ "/dev/sdc1" ]'
 
 [glusterfs_registry]
 # For DEV please modify glusterfs_deploy.yml 'assert' condition to contain 'count >= 1'
-# and heketi_init_db.yml setup command adding '--durability=none --replica=1'
-#
+# and glusterfs_registry.yml create command adding '--durability=none --replica=1'
 # You need 100GB local SSD or LVM
-osh.localdomain glusterfs_devices='[ "/dev/sdd" ]'
+#
+k0.sys.one.pl l_kubelet_node_name="k0.sys.one.pl" glusterfs_devices='[ "/dev/sdc2" ]'
 
 [OSEv3:children]
 masters
 nodes
 etcd
-nfs
-#glusterfs
+glusterfs
 glusterfs_registry
 
 [OSEv3:vars]
@@ -89,47 +99,56 @@ glusterfs_registry
 openshift_router_selector='node-role.kubernetes.io/master=true'
 # registry should be placed on infra
 openshift_registry_selector='node-role.kubernetes.io/master=true'
-# we want to use docker --storage-driver=btrfs
+# we want to use docker with --storage-driver=btrfs
 openshift_disable_check=memory_availability,disk_availability,docker_storage_driver,docker_storage,docker_image_availability
 
-# we want to use GlusterFS replicated storage via Heketi
+# we want to use GlusterFS replicated storage everywhere
 openshift_master_dynamic_provisioning_enabled=true
-
-openshift_hosted_registry_storage_kind=dynamic
-openshift_hosted_registry_storage_volume_size=5Gi
+openshift_hosted_registry_storage_kind=glusterfs
+openshift_hosted_registry_storage_volume_size=1Gi
 openshift_hosted_registry_selector='node-role.kubernetes.io/infra=true'
+openshift_hosted_registry_replicas=1
 
 openshift_metrics_install_metrics=true
 openshift_metrics_hawkular_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_metrics_cassandra_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_metrics_heapster_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_metrics_storage_kind=dynamic
-openshift_metrics_storage_volume_size=5Gi
-openshift_metrics_cassandra_pvc_storage_class_name="infra-storage" 
+openshift_metrics_storage_volume_size=2Gi
+openshift_metrics_cassandra_pvc_storage_class_name="glusterfs-registry-block" 
 
 openshift_logging_install_logging=true
 openshift_logging_kibana_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_logging_curator_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_logging_storage_kind=dynamic
-openshift_logging_es_pvc_size=10Gi
+openshift_logging_es_pvc_size=5Gi
 openshift_logging_elasticsearch_storage_type=pvc
-openshift_logging_es_pvc_storage_class_name="infra-storage"
+openshift_logging_es_pvc_storage_class_name="glusterfs-registry-block"
+openshift_logging_es_allow_external=true
 
-openshift_storage_glusterfs_block_host_vol_size=30
+openshift_storage_glusterfs_namespace=app-storage
+openshift_storage_glusterfs_storageclass=true
+openshift_storage_glusterfs_storageclass_default=false
+openshift_storage_glusterfs_block_deploy=true
+openshift_storage_glusterfs_block_host_vol_size=10
+openshift_storage_glusterfs_block_storageclass=true
+openshift_storage_glusterfs_block_storageclass_default=false
 
 openshift_storage_glusterfs_registry_namespace=infra-storage
-
-openshift_hosted_registry_replicas=1
+openshift_storage_glusterfs_registry_block_deploy=true
+openshift_storage_glusterfs_registry_block_host_vol_size=10
+openshift_storage_glusterfs_registry_block_storageclass=true
+openshift_storage_glusterfs_registry_block_storageclass_default=false
 
 openshift_hosted_manage_router=true
 openshift_hosted_manage_registry=true
 openshift_hosted_manage_registry_console=true
 
 # let's scale router
-openshift_hosted_router_replicas=4
+openshift_hosted_router_replicas=2
 
-# automatic local storage
+# dynamic persistent local storage
 openshift_persistentlocalstorage_enabled=true
 openshift_persistentlocalstorage_classes=[]
 openshift_persistentlocalstorage_path=/mnt/local-storage
@@ -140,26 +159,25 @@ openshift_deployment_type=origin
 openshift_release="3.11"
 openshift_install_examples=true
 
-# subdomain concept: service.apps.osh.localdomain
-openshift_master_default_subdomain=apps.osh.localdomain
-openshift_master_cluster_hostname=osh.localdomain
-openshift_master_cluster_public_hostname=osh.localdomain
+# subdomain concept: service.apps.k0.sys.one.pl
+openshift_master_default_subdomain=apps.k0.sys.one.pl
+openshift_master_cluster_hostname=k0.sys.one.pl
+openshift_master_cluster_public_hostname=k0.sys.one.pl
 
 # in case you have network LB device in front of OCP services
 # you don't need manually provided certificates, but it is highly
 # recommended; when you consume services directly from router
 # it should use own dedicated certificates
+#
 openshift_ca_cert_expire_days=3660
 openshift_node_cert_expire_days=3660
 openshift_master_cert_expire_days=3660
 etcd_ca_default_days=3660
 #openshift_master_named_certificates=
-#openshift_hosted_router_certificate={"certfile": "/path/to/router.crt", "keyfile": "/path/to/router.key", "cafile": "/path/to/router-ca.crt"}
+#openshift_hosted_router_certificate=
 
 openshift_cluster_monitoring_operator_install=true
-openshift_metrics_install_metrics=true
-openshift_logging_install_logging=true
-ansible_service_broker_install=false
+ansible_service_broker_install=true
 openshift_node_problem_detector_install=true
 openshift_enable_olm=true
 osm_use_cockpit=true
@@ -167,7 +185,7 @@ osm_cockpit_plugins=['cockpit-kubernetes']
 
 # uncomment if you don't have docker already configured for OKD container method
 #openshift_docker_insecure_registries=172.30.0.0/16
-#openshift_docker_options=
+openshift_docker_options="--selinux-enabled"
 
 # Some SLAs
 openshift_master_external_ratelimit_qps=200
@@ -175,11 +193,12 @@ openshift_master_external_ratelimit_burst=400
 openshift_master_loopback_ratelimit_qps=300
 openshift_master_loopback_ratelimit_burst=600
 
-# please change to OAuth Keycloak
+# please change
 openshift_master_identity_providers=[{'name': 'allow_all', 'login': 'true', 'challenge': 'true', 'kind': 'AllowAllPasswordIdentityProvider'}]
 
-#openshift_logging_es_cluster_size=1
+# may be useful if DNS is broken
 #openshift_node_dnsmasq_additional_config_file=/etc/dnsmasq/conf.d/infra.conf
 
+# mandatory
 os_firewall_use_firewalld=true
 ansible_ssh_user=root
