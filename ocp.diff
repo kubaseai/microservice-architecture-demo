@@ -1,0 +1,60 @@
+diff --git a/roles/openshift_storage_glusterfs/tasks/glusterfs_deploy.yml b/roles/openshift_storage_glusterfs/tasks/glusterfs_deploy.yml
+index fac11cf..2491363 100644
+--- a/roles/openshift_storage_glusterfs/tasks/glusterfs_deploy.yml
++++ b/roles/openshift_storage_glusterfs/tasks/glusterfs_deploy.yml
+@@ -1,6 +1,6 @@
+ ---
+ - assert:
+-    that: "glusterfs_nodes | count >= 3"
++    that: "glusterfs_nodes | count >= 1"
+     msg: There must be at least three GlusterFS nodes specified
+ 
+ - name: Copy GlusterFS DaemonSet template
+diff --git a/roles/openshift_storage_glusterfs/tasks/glusterfs_registry.yml b/roles/openshift_storage_glusterfs/tasks/glusterfs_registry.yml
+index 1bfe9ed..719a077 100644
+--- a/roles/openshift_storage_glusterfs/tasks/glusterfs_registry.yml
++++ b/roles/openshift_storage_glusterfs/tasks/glusterfs_registry.yml
+@@ -11,5 +11,5 @@
+   register: registry_volume
+ 
+ - name: Create GlusterFS registry volume
+-  command: "{{ glusterfs_heketi_client }} volume create --size={{ openshift_hosted_registry_storage_volume_size | replace('Gi','') }} --name={{ openshift_hosted_registry_storage_glusterfs_path }}"
++  command: "{{ glusterfs_heketi_client }} volume create --size={{ openshift_hosted_registry_storage_volume_size | replace('Gi','') }} --name={{ openshift_hosted_registry_storage_glusterfs_path }} --durability=none --replica=1"
+   when: "openshift_hosted_registry_storage_glusterfs_path not in registry_volume.stdout"
+diff --git a/roles/openshift_storage_glusterfs/tasks/heketi_init_db.yml b/roles/openshift_storage_glusterfs/tasks/heketi_init_db.yml
+index c45b8b0..54906b4 100644
+--- a/roles/openshift_storage_glusterfs/tasks/heketi_init_db.yml
++++ b/roles/openshift_storage_glusterfs/tasks/heketi_init_db.yml
+@@ -1,6 +1,6 @@
+ ---
+ - name: Create heketi DB volume
+-  command: "{{ glusterfs_heketi_client }} setup-openshift-heketi-storage --image {{ glusterfs_heketi_image }} --listfile /tmp/heketi-storage.json"
++  command: "{{ glusterfs_heketi_client }} setup-openshift-heketi-storage --image {{ glusterfs_heketi_image }} --listfile /tmp/heketi-storage.json --durability=none --replica=1"
+   register: setup_storage
+ 
+ - name: Copy heketi-storage list
+diff --git a/roles/openshift_storage_glusterfs/templates/gluster-block-storageclass.yml.j2 b/roles/openshift_storage_glusterfs/templates/gluster-block-storageclass.yml.j2
+index bea5ef9..6d3ed3e 100644
+--- a/roles/openshift_storage_glusterfs/templates/gluster-block-storageclass.yml.j2
++++ b/roles/openshift_storage_glusterfs/templates/gluster-block-storageclass.yml.j2
+@@ -12,7 +12,7 @@ parameters:
+   resturl: "http://{% if glusterfs_heketi_is_native %}heketi-{{ glusterfs_name }}.{{ glusterfs_namespace }}.svc:8080{% else %}{{ glusterfs_heketi_url }}:{{ glusterfs_heketi_port }}{% endif %}"
+   restuser: "admin"
+   chapauthenabled: "true"
+-  hacount: "3"
++  hacount: "1"
+ {% if glusterfs_heketi_admin_key is defined %}
+   restsecretnamespace: "{{ glusterfs_namespace }}"
+   restsecretname: "heketi-{{ glusterfs_name }}-admin-secret-block"
+diff --git a/roles/openshift_storage_glusterfs/templates/glusterfs-storageclass.yml.j2 b/roles/openshift_storage_glusterfs/templates/glusterfs-storageclass.yml.j2
+index 17c0614..77a5ca6 100644
+--- a/roles/openshift_storage_glusterfs/templates/glusterfs-storageclass.yml.j2
++++ b/roles/openshift_storage_glusterfs/templates/glusterfs-storageclass.yml.j2
+@@ -11,6 +11,7 @@ provisioner: kubernetes.io/glusterfs
+ parameters:
+   resturl: "http://{% if glusterfs_heketi_is_native %}heketi-{{ glusterfs_name }}.{{ glusterfs_namespace }}.svc:8080{% else %}{{ glusterfs_heketi_url }}:{{ glusterfs_heketi_port }}{% endif %}"
+   restuser: "admin"
++  volumetype: "none"
+ {% if glusterfs_heketi_admin_key is defined %}
+   secretNamespace: "{{ glusterfs_namespace }}"
+   secretName: "heketi-{{ glusterfs_name }}-admin-secret"
