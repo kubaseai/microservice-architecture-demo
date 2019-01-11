@@ -5,15 +5,11 @@
 ## 1.https://access.redhat.com/documentation/en-us/openshift_container_platform/
 ## $VER/html-single/installing_clusters/#install-config-example-inventories,
 ##
-## 2.https://docs.okd.io/latest/install_config/persistent_storage/
-## persistent_storage_glusterfs.html#install-config-persistent-storage-
-## persistent-storage-glusterfs
-##
-## 3.https://github.com/openshift/openshift-ansible/tree/master/roles/
+## 2.https://github.com/openshift/openshift-ansible/tree/master/roles/
 ## openshift_storage_glusterfs and openshift_logging
 ##
-## 4. https://docs.openshift.com/container-platform/3.11/install_config/
-## aggregate_logging.html
+## 3. https://docs.okd.io/latest/3.11/configuring_inventory_file.html
+## 4. https://github.com/redhat-storage/openshift-cic
 ##
 ## then run on fresh system:
 ##
@@ -59,7 +55,7 @@
 
 [masters]
 # at least 4vCPUs, 16GB RAM, 50GB SSD storage
-k0.sys.one.pl
+k0.sys.one.pl openshift_schedulable=true storage=true
 
 [etcd]
 # at least 2vCPUs, 8GB RAM, 5GB SSD storage
@@ -74,25 +70,20 @@ k0.sys.one.pl openshift_node_group_name="node-config-all-in-one"
 #k0.sys.one.pl openshift_node_group_name="node-config-compute"
 
 [glusterfs]
-# For DEV please modify glusterfs_deploy.yml 'assert' condition to contain 'count >= 1'
-# and tasks/heketi_init_db.yml setup command adding '--durability=none --replica=1'
+# For DEV please modify:
+# - glusterfs_deploy.yml, 'assert' condition should contain 'count >= 1'
+# - tasks/heketi_init_db.yml, add in setup cmd '--durability=none --replica=1',
+# - gluster-*-storageclass.yml.j2, set hacount:"1", volumetype:"none"
+#
 # You need 100GB local SSD or LVM
 #
-k0.sys.one.pl l_kubelet_node_name="k0.sys.one.pl" glusterfs_devices='[ "/dev/sdc1" ]'
-
-[glusterfs_registry]
-# For DEV please modify glusterfs_deploy.yml 'assert' condition to contain 'count >= 1'
-# and glusterfs_registry.yml create command adding '--durability=none --replica=1'
-# You need 100GB local SSD or LVM
-#
-k0.sys.one.pl l_kubelet_node_name="k0.sys.one.pl" glusterfs_devices='[ "/dev/sdc2" ]'
+k0.sys.one.pl glusterfs_devices='[ "/dev/sdc" ]'
 
 [OSEv3:children]
 masters
 nodes
 etcd
 glusterfs
-glusterfs_registry
 
 [OSEv3:vars]
 # router should be placed on infra
@@ -105,7 +96,7 @@ openshift_disable_check=memory_availability,disk_availability,docker_storage_dri
 # we want to use GlusterFS replicated storage everywhere
 openshift_master_dynamic_provisioning_enabled=true
 openshift_hosted_registry_storage_kind=glusterfs
-openshift_hosted_registry_storage_volume_size=1Gi
+openshift_hosted_registry_storage_volume_size=4Gi
 openshift_hosted_registry_selector='node-role.kubernetes.io/infra=true'
 openshift_hosted_registry_replicas=1
 
@@ -113,51 +104,57 @@ openshift_metrics_install_metrics=true
 openshift_metrics_hawkular_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_metrics_cassandra_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_metrics_heapster_nodeselector={"node-role.kubernetes.io/infra": "true"} 
-openshift_metrics_storage_kind=dynamic
-openshift_metrics_storage_volume_size=2Gi
-openshift_metrics_cassandra_pvc_storage_class_name="glusterfs-registry-block" 
+#openshift_metrics_cassandra_storage_type=pv
+#openshift_metrics_cassandra_pvc_storage_class_name=glusterfs-storage-block
+openshift_metrics_storage_volume_size=1Gi
+openshift_metrics_cassandra_storage_type=emptydir
+openshift_metrics_cassandra_pvc_storage_class_name=""
 
 openshift_logging_install_logging=true
 openshift_logging_kibana_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_logging_curator_nodeselector={"node-role.kubernetes.io/infra": "true"} 
 openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra": "true"} 
-openshift_logging_storage_kind=dynamic
-openshift_logging_es_pvc_size=5Gi
+openshift_logging_es_pvc_dynamic=true
 openshift_logging_elasticsearch_storage_type=pvc
-openshift_logging_es_pvc_storage_class_name="glusterfs-registry-block"
+openshift_logging_es_pvc_storage_class_name=glusterfs-storage
+openshift_logging_es_pvc_size=10Gi
 openshift_logging_es_allow_external=true
+openshift_logging_es_memory_limit=1Gi
+openshift_logging_es_ops_memory_limit=1Gi
+openshift_logging_es_number_of_replicas=0
+openshift_logging_curator_memory_limit=512Mi
+openshift_logging_kibana_memory_limit=512Mi
+openshift_logging_kibana_ops_memory_limit=512Mi
+openshift_logging_kibana_proxy_memory_limit=512Mi
+openshift_logging_fluentd_memory_limit=512Mi
+openshift_logging_use_ops=false
 
 openshift_storage_glusterfs_namespace=app-storage
 openshift_storage_glusterfs_storageclass=true
 openshift_storage_glusterfs_storageclass_default=false
 openshift_storage_glusterfs_block_deploy=true
-openshift_storage_glusterfs_block_host_vol_size=10
+openshift_storage_glusterfs_block_host_vol_size=20
 openshift_storage_glusterfs_block_storageclass=true
 openshift_storage_glusterfs_block_storageclass_default=false
-
-openshift_storage_glusterfs_registry_namespace=infra-storage
-openshift_storage_glusterfs_registry_block_deploy=true
-openshift_storage_glusterfs_registry_block_host_vol_size=10
-openshift_storage_glusterfs_registry_block_storageclass=true
-openshift_storage_glusterfs_registry_block_storageclass_default=false
 
 openshift_hosted_manage_router=true
 openshift_hosted_manage_registry=true
 openshift_hosted_manage_registry_console=true
 
 # let's scale router
-openshift_hosted_router_replicas=2
+openshift_hosted_router_replicas=1
 
 # dynamic persistent local storage
-openshift_persistentlocalstorage_enabled=true
-openshift_persistentlocalstorage_classes=[]
-openshift_persistentlocalstorage_path=/mnt/local-storage
-openshift_persistentlocalstorage_provisionner_image=quay.io/external_storage/local-volume-provisioner:latest
+#openshift_persistentlocalstorage_enabled=true
+#openshift_persistentlocalstorage_classes=[]
+#openshift_persistentlocalstorage_path=/mnt/local-storage
+#openshift_persistentlocalstorage_provisionner_image=quay.io/external_storage/local-volume-provisioner:latest
 
 openshift_deployment_type=origin
 #openshift_deployment_type=openshift-enterprise
 openshift_release="3.11"
 openshift_install_examples=true
+containerized=true
 
 # subdomain concept: service.apps.k0.sys.one.pl
 openshift_master_default_subdomain=apps.k0.sys.one.pl
