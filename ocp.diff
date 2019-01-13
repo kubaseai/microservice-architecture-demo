@@ -58,3 +58,34 @@ index 17c0614..77a5ca6 100644
  {% if glusterfs_heketi_admin_key is defined %}
    secretNamespace: "{{ glusterfs_namespace }}"
    secretName: "heketi-{{ glusterfs_name }}-admin-secret"
+diff --git a/roles/olm/defaults/main.yaml b/roles/olm/defaults/main.yaml
+index 0d54093fe..c788a42ff 100644
+--- a/roles/olm/defaults/main.yaml
++++ b/roles/olm/defaults/main.yaml
+@@ -3,10 +3,10 @@ operator_lifecycle_manager_remove: false
+ operator_lifecycle_manager_install: true
+ 
+ olm_image_dict:
+-  origin: 'quay.io/coreos/olm'
++  origin: 'quay.io/coreos/olm:0.8.1'
+   openshift-enterprise: "{{ l_osm_registry_url | regex_replace('${component}' | regex_escape, 'operator-lifecycle-manager') }}"
+ catalog_image_dict:
+-  origin: 'quay.io/coreos/catalog'
++  origin: 'quay.io/coreos/catalog:0.7.1'
+   openshift-enterprise: "{{ l_osm_registry_url | regex_replace('${component}' | regex_escape, 'operator-lifecycle-manager') }}"
+ 
+ olm_operator_image: "{{ olm_image_dict[openshift_deployment_type] }}"
+diff --git a/roles/openshift_node_problem_detector/defaults/main.yaml b/roles/openshift_node_problem_detector/defaults/main.yaml
+index f5e534cee..21f083e3c 100644
+--- a/roles/openshift_node_problem_detector/defaults/main.yaml
++++ b/roles/openshift_node_problem_detector/defaults/main.yaml
+@@ -6,7 +6,8 @@ openshift_node_problem_detector_delete_tempfiles: True
+ 
+ # node-problem-detector image setup
+ 
+-openshift_node_problem_detector_image: "{{ l_osm_registry_url | regex_replace('${component}' | regex_escape, 'node-problem-detector') }}"
++openshift_node_problem_detector_image: "k8s.gcr.io/node-problem-detector:v0.6.2"
++# "{{ l_osm_registry_url | regex_replace('${component}' | regex_escape, 'node-problem-detector') }}"
+ 
+ # node_problem_detector daemonset setup
+ openshift_node_problem_detector_daemonset_name: node-problem-detector
