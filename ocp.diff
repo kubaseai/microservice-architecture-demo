@@ -75,4 +75,18 @@ index 0d54093fe..c788a42ff 100644
    openshift-enterprise: "{{ l_osm_registry_url | regex_replace('${component}' | regex_escape, 'operator-lifecycle-manager') }}"
  
  olm_operator_image: "{{ olm_image_dict[openshift_deployment_type] }}"
-
+diff --git a/roles/container_runtime/tasks/package_docker.yml b/roles/container_runtime/tasks/package_docker.yml                                                                
+index dc53987a2..22d726e25 100644                                                                                                                                               
+--- a/roles/container_runtime/tasks/package_docker.yml                                                                                                                          
++++ b/roles/container_runtime/tasks/package_docker.yml                                                                                                                          
+@@ -116,7 +116,7 @@                                                                                                                                                             
+       {% if (openshift_docker_hosted_registry_insecure | bool) and openshift_docker_hosted_registry_network %} --insecure-registry={{ openshift_docker_hosted_registry_network 
+}} {% endif %} \                                                                                                                                                                
+       {% if docker_options is defined %} {{ docker_options }}{% endif %} \                                                                                                     
+       {% if openshift_docker_options %} {{ openshift_docker_options }}{% endif %} \                                                                                            
+-      --signature-verification={{ openshift_docker_signature_verification | bool }}'"                                                                                          
++      '"                                                                                                                                                                       
+   when: docker_check.stat.isreg is defined and docker_check.stat.isreg                                                                                                         
+   notify:                                                                                                                                                                      
+   - restart container runtime
+   
