@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: iam
-        image: jboss/keycloak
+        image: jboss/keycloak-openshift
         env:
         - name: KEYCLOAK_USER
           value: "admin"
