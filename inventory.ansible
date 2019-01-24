@@ -67,9 +67,7 @@ openshift_release="3.11"
 openshift_install_examples=false
 containerized=true
 openshift_use_crio=true
-openshift_use_crio_only=true
 openshift_crio_enable_docker_gc=true
-#openshift_crio_docker_gc_node_selector={'node-role/kubernetes.io/infra': 'true'}
 
 openshift_master_default_subdomain=apps.osh.localdomain
 openshift_master_cluster_hostname=osh.localdomain
@@ -81,16 +79,9 @@ openshift_master_cert_expire_days=3660
 etcd_ca_default_days=3660
 
 openshift_cluster_monitoring_operator_install=false
-ansible_service_broker_install=false
+ansible_service_broker_install=true
 openshift_node_problem_detector_install=false
 openshift_enable_olm=true
-osm_use_cockpit=false
-
-# Some SLAs
-openshift_master_external_ratelimit_qps=400
-openshift_master_external_ratelimit_burst=600
-openshift_master_loopback_ratelimit_qps=400
-openshift_master_loopback_ratelimit_burst=600
 
 # please change
 openshift_master_identity_providers=[{'name': 'allow_all', 'login': 'true', 'challenge': 'true', 'kind': 'AllowAllPasswordIdentityProvider'}]
