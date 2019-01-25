@@ -8,6 +8,6 @@ spec:
     deployment: micro-svc
   ports:
     -
-      name: service-http
+      name: http-service
       protocol: TCP
       port: 8181

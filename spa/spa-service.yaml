@@ -8,6 +8,6 @@ spec:
     deployment: spa
   ports:
     -
-      name: web-http
+      name: http-web
       protocol: TCP
       port: 80

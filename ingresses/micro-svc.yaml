@@ -5,7 +5,7 @@ metadata:
 spec:
   host: micro-service.vger.sys.one.pl
   port:
-    targetPort: service-http
+    targetPort: http-service
   tls:
     insecureEdgeTerminationPolicy: Redirect
     termination: edge

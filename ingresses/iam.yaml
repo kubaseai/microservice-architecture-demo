@@ -9,7 +9,7 @@ spec:
 #    weight: 1
   host: iam.vger.sys.one.pl
   port:
-    targetPort: common-https
+    targetPort: https-common
   tls:
     insecureEdgeTerminationPolicy: Redirect
     termination: passthrough

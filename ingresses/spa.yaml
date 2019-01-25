@@ -5,7 +5,7 @@ metadata:
 spec:
   host: spa.vger.sys.one.pl
   port:
-    targetPort: web-http
+    targetPort: http-web
   tls:
     insecureEdgeTerminationPolicy: Redirect
     termination: edge

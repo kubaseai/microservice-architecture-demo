@@ -8,6 +8,6 @@ spec:
     deployment: iam
   ports:
     -
-      name: common-https
+      name: https-common
       protocol: TCP
       port: 8443
