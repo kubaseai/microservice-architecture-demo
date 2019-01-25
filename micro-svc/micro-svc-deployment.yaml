@@ -1,8 +1,6 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  annotations:
-    sidecar.istio.io/inject: "true"
   name: micro-svc-deployment
 spec:
   containers:
@@ -15,6 +13,8 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+         sidecar.istio.io/inject: "true"
       labels:
         deployment: micro-svc
     spec:

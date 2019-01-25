@@ -55,12 +55,12 @@ setupStorage
 # oc create -f ../extras/rdbms/pgsql/pgsql-persistent-volume-claim.yaml
 
 info 'Creating Service(s)...'
-for svc in $(find .. -name *service.y*ml | grep -v "-db"); do
+for svc in $(find .. -name *service.y*ml | grep -v db); do
     [[ ! $svc =~ .*gw.* ]] && oc create -f $svc;
 done
 
 info 'Creating Deployment(s)...'
-for svc in $(find .. -name *deployment.y*ml | grep -v "-db"); do
+for svc in $(find .. -name *deployment.y*ml | grep -v db); do
     [[ ! $svc =~ .*gw.* ]] && oc create -f $svc;
 done
 
