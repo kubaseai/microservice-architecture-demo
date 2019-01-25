@@ -51,16 +51,16 @@ oc create configmap spa-cors --from-file=../confs/spa-cors/
 
 setupStorage
 
-info 'Deploying db volume...'
-oc create -f ../extras/rdbms/pgsql/pgsql-persistent-volume-claim.yaml
+# info 'Deploying db volume...'
+# oc create -f ../extras/rdbms/pgsql/pgsql-persistent-volume-claim.yaml
 
 info 'Creating Service(s)...'
-for svc in $(find .. -name *service.y*ml); do
+for svc in $(find .. -name *service.y*ml | grep -v "-db"); do
     [[ ! $svc =~ .*gw.* ]] && oc create -f $svc;
 done
 
 info 'Creating Deployment(s)...'
-for svc in $(find .. -name *deployment.y*ml); do
+for svc in $(find .. -name *deployment.y*ml | grep -v "-db"); do
     [[ ! $svc =~ .*gw.* ]] && oc create -f $svc;
 done
 
