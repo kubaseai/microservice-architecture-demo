@@ -39,7 +39,10 @@ oc create -f ../rbac/rbac.yaml
 oc adm policy add-role-to-user admin admin -n msa
 
 # WARNING!!! Security risk introduced by some container
-oc adm policy add-scc-to-user anyuid -n msa -z msa-account
+# oc adm policy add-scc-to-user anyuid -n msa -z msa-account
+#
+# due to istio
+oc adm policy add-scc-to-user privileged -n msa -z msa-account
 
 info 'Creating ConfigMap(s)...'
 oc create configmap micro-svc-app-properties --from-file=../confs/micro-svc/
