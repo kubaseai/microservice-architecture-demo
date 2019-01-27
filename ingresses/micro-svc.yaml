@@ -1,9 +1,9 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: micro-service.vger.sys.one.pl
+  name: micro-service.apps.k0.sys.one.pl
 spec:
-  host: micro-service.vger.sys.one.pl
+  host: micro-service.apps.k0.sys.one.pl
   port:
     targetPort: http-service
   tls:

@@ -1,9 +1,9 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: gw.vger.sys.one.pl
+  name: gw.apps.k0.sys.one.pl
 spec:
-  host: gw.vger.sys.one.pl
+  host: gw.apps.k0.sys.one.pl
   port:
     targetPort: gw-service-ssl
   tls:
@@ -20,9 +20,9 @@ spec:
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: gw-ui.vger.sys.one.pl
+  name: gw-ui.apps.k0.sys.one.pl
 spec:
-  host: gw-ui.vger.sys.one.pl
+  host: gw-ui.apps.k0.sys.one.pl
   port:
     targetPort: gw-ui
   tls:
@@ -39,9 +39,9 @@ spec:
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: gw-admin-ui.vger.sys.one.pl
+  name: gw-admin-ui.apps.k0.sys.one.pl
 spec:
-  host: gw-admin-ui.vger.sys.one.pl
+  host: gw-admin-ui.apps.k0.sys.one.pl
   port:
     targetPort: gw-admin-ui
   tls:

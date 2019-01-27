@@ -22,7 +22,7 @@ spec:
       - name: micro-svc
         image: kubaseai/s5
         env:
-        - name: _JAVA_OPTS
+        - name: JAVA_OPTS
           value: "-Xms128m -Xmx128m"
 #        resources:
 #          limits:
@@ -55,10 +55,13 @@ spec:
         ports:
         -
           containerPort: 8181
+          name: http-service
           protocol: "TCP"
         volumeMounts:
         - name: micro-svc-app-properties
           mountPath: /tmp/config
+        securityContext:
+          privileged: false
       serviceAccountName: "msa-account"
       volumes:
       - name: micro-svc-app-properties

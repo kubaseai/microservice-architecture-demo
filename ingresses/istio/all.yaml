@@ -1,0 +1,33 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: msa-gateway
+  namespace: msa
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: micro-svc-virtual
+  namespace: msa
+spec:
+  hosts:
+  - "micro-svc.svcs.k0.sys.one.pl"
+  gateways:
+  - msa-gateway
+  http:
+  - match:
+    route:
+    - destination:
+        host: micro-svc-service
+        port:
+          number: 8181

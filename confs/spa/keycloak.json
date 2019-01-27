@@ -1,6 +1,6 @@
 {
   "realm": "master",
-  "auth-server-url": "https://iam.vger.sys.one.pl/auth",
+  "auth-server-url": "https://iam.apps.k0.sys.one.pl/auth",
   "ssl-required": "external",
   "resource": "account",
   "public-client": true,

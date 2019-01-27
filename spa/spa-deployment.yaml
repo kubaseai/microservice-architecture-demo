@@ -54,12 +54,15 @@ spec:
         ports:
         -
           containerPort: 80
+          name: http-web
           protocol: "TCP"
         volumeMounts:
         - name: spa-files
           mountPath: /usr/share/nginx/html
         - name: spa-cors
           mountPath: /etc/nginx/conf.d
+        securityContext:
+          privileged: false
       serviceAccountName: "msa-account"
       volumes:
       - name: spa-files

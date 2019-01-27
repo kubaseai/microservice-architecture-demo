@@ -1,13 +1,13 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: iam.vger.sys.one.pl
+  name: iam.apps.k0.sys.one.pl
 spec:
 #  alternateBackends:
 #  - kind: Service
 #    name: iam-service-INSTANCE
 #    weight: 1
-  host: iam.vger.sys.one.pl
+  host: iam.apps.k0.sys.one.pl
   port:
     targetPort: https-common
   tls:

@@ -1,9 +1,9 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: spa.vger.sys.one.pl
+  name: spa.apps.k0.sys.one.pl
 spec:
-  host: spa.vger.sys.one.pl
+  host: spa.apps.k0.sys.one.pl
   port:
     targetPort: http-web
   tls:
