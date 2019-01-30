@@ -33,7 +33,7 @@ cd scripts<br/>
 ![SPA calls usvc](https://github.com/kubaseai/microservice-architecture-demo/blob/master/_imgs/msa-07.png)
 <br/>
 
-[Istio](https://istio.io/docs/setup/kubernetes/sidecar-injection/) [tutorial](https://docs.giantswarm.io/guides/deploying-istio/) and [introduction](https://medium.com/namely-labs/a-crash-course-for-running-istio-1c6125930715)
+[Istio](https://istio.io/docs/setup/kubernetes/sidecar-injection/) [tutorial](https://docs.giantswarm.io/guides/deploying-istio/), [introduction](https://medium.com/namely-labs/a-crash-course-for-running-istio-1c6125930715), [examples](https://developers.redhat.com/topics/service-mesh/)
 
 
 
