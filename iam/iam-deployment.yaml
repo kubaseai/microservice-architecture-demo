@@ -39,8 +39,8 @@ spec:
             command:
             - /bin/sh
             - -c
+# Istio enables mutual SSL on localhost, use 127.0.0.1 instead         
             - 'curl -k https://127.0.0.1:8443'
-# Istio configures mutual SSL #
           initialDelaySeconds: 20
           periodSeconds: 10
           failureThreshold: 18
@@ -49,8 +49,8 @@ spec:
             command:
               - /bin/sh
               - -c
+# Istio enables mutual SSL on localhost, use 127.0.0.1 instead
               - 'curl -k https://127.0.0.1:8443'
-# Istio configures mutual SSL #
           initialDelaySeconds: 20
           periodSeconds: 10
           failureThreshold: 18
